@@ -1,0 +1,34 @@
+# Copyright (c) 2021, 2022, Oracle Corporation and/or its affiliates.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl.
+# https://kubernetes.github.io/ingress-nginx/examples/
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ngnix-tls-tunneling
+  namespace: DOMAIN_NS
+  annotations:
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/session-cookie-name: "JSESSIONID"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      more_clear_input_headers "WL-Proxy-Client-IP" "WL-Proxy-SSL";
+      more_set_input_headers "X-Forwarded-Proto: https";
+      more_set_input_headers "WL-Proxy-SSL: true";
+    nginx.ingress.kubernetes.io/ingress.allow-http: "false"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - 'INGRESS_HOST'
+    secretName: TLS_CERT
+  rules:
+  - host: 'INGRESS_HOST' 
+    http:
+      paths:
+      - path:
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: DOMAIN_UID-cluster-CLUSTER
+            port:
+              number: 8877
